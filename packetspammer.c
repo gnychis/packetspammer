@@ -24,6 +24,8 @@
 
 /* wifi bitrate to use in 500kHz units */
 
+#define TOTAL_RATES 28
+
 static const u8 u8aRatesToUse[] = {
 	54*2,
 	48*2,
@@ -57,6 +59,8 @@ static const u8 u8aRadiotapHeader[] = {
 };
 #define	OFFSET_FLAGS 0x10
 #define	OFFSET_RATE 0x11
+#define MCS_OFFSET 0x19
+#define MCS_RATE_OFFSET 0x1b
 
 /* Penumbra IEEE80211 header */
 
@@ -321,14 +325,7 @@ main(int argc, char *argv[])
 			switch (rti.this_arg_index) {
 			case IEEE80211_RADIOTAP_RATE:
 				prd.m_nRate = (*rti.this_arg);
-//			prd.m_nRate = (*rti.this_arg) = u8aRatesToUse[nRateIndex];
-        printf("******** RATE: %d\n", prd.m_nRate);
 				break;
-
-      case IEEE80211_RADIOTAP_MCS:
-        printf("++++++++++ MSC\n"); 
-        break;
-
 
 			case IEEE80211_RADIOTAP_CHANNEL:
 				prd.m_nChannel =
@@ -371,9 +368,20 @@ main(int argc, char *argv[])
 			sizeof (u8aRadiotapHeader));
 		if (flagMarkWithFCS)
 			pu8[OFFSET_FLAGS] |= IEEE80211_RADIOTAP_F_FCS;
-		nRate = pu8[OFFSET_RATE] = u8aRatesToUse[nRateIndex++];
-    printf("********* rateagain: %d\n", nRate);
-		if (nRateIndex >= sizeof (u8aRatesToUse))
+
+    if(nRateIndex < sizeof(u8aRatesToUse)) {
+      nRate = pu8[OFFSET_RATE] = u8aRatesToUse[nRateIndex++];
+      pu8[MCS_OFFSET] = 0x00;
+    } else if(nRateIndex >= sizeof(u8aRatesToUse)) {
+      nRate=100;
+      pu8[MCS_OFFSET] = 0x0f;
+      pu8[MCS_RATE_OFFSET] = nRateIndex-12;
+      printf("MCS Index: %d\n", nRateIndex-12);
+    } 
+
+    nRateIndex++;
+
+		if (nRateIndex >= TOTAL_RATES)
 			nRateIndex = 0;
 		pu8 += sizeof (u8aRadiotapHeader);
 
