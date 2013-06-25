@@ -43,8 +43,8 @@ static const u8 u8aRatesToUse[] = {
 static const u8 u8aRadiotapHeader[] = {
 
 	0x00, 0x00, // <-- radiotap version
-	0x19, 0x00, // <- radiotap header length
-	0x6f, 0x08, 0x00, 0x00, // <-- bitmap
+	0x1c, 0x00, // <- radiotap header length
+	0x6f, 0x08, 0x08, 0x00, // <-- bitmap
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // <-- timestamp
 	0x00, // <-- flags (Offset +0x10)
 	0x6c, // <-- rate (0ffset +0x11)
@@ -52,6 +52,7 @@ static const u8 u8aRadiotapHeader[] = {
 	0xde, // <-- antsignal
 	0x00, // <-- antnoise
 	0x01, // <-- antenna
+  0x02, 0x00, 0x0f,  // <-- MCS
 
 };
 #define	OFFSET_FLAGS 0x10
@@ -315,12 +316,19 @@ main(int argc, char *argv[])
 
 		while ((n = ieee80211_radiotap_iterator_next(&rti)) == 0) {
 
+      printf("Iterator index: %d\n", rti.arg_index);
+
 			switch (rti.this_arg_index) {
 			case IEEE80211_RADIOTAP_RATE:
 				prd.m_nRate = (*rti.this_arg);
 //			prd.m_nRate = (*rti.this_arg) = u8aRatesToUse[nRateIndex];
         printf("******** RATE: %d\n", prd.m_nRate);
 				break;
+
+      case IEEE80211_RADIOTAP_MCS:
+        printf("++++++++++ MSC\n"); 
+        break;
+
 
 			case IEEE80211_RADIOTAP_CHANNEL:
 				prd.m_nChannel =
