@@ -22,6 +22,16 @@
 #include "radiotap.h"
 #include <sys/time.h>
 
+//#define DEBUG
+
+#ifdef DEBUG
+#  define D(x) x
+#else
+#  define D(x) 
+#endif
+
+int total_pkts=0;
+
 /* wifi bitrate to use in 500kHz units */
 
 #define TOTAL_RATES 28
@@ -41,6 +51,25 @@ static const u8 u8aRatesToUse[] = {
 };
 
 /* this is the template radiotap header we send packets out with */
+
+# define T 5
+
+int flag = T;
+
+void sigalrm_handler(int);
+
+void sigalrm_handler(int sig)
+{
+    //if(--flag){
+        printf("Hi...\n");   /*version 1*/
+        /*printf("Hi...");*/ /*version 2*/
+    //}else{
+    //    printf("BYE\n");
+    //    flag=T;
+    //}
+    alarm(1);
+}
+
 
 static const u8 u8aRadiotapHeader[] = {
 
@@ -117,7 +146,7 @@ Dump(u8 * pu8, int nLength)
 			buf += sprintf(buf, "%04x: %s %s\n",
 				nStart, sz, szChar);
 			nSameCount = 0;
-			printf("%s", szBuf);
+			D(printf("%s", szBuf));
 			buf = szBuf;
 		}
 		nPos = 0; nStart = n+1; nLine++;
@@ -135,7 +164,7 @@ Dump(u8 * pu8, int nLength)
 		}
 	}
 	buf += sprintf(buf, "%s\n", szChar);
-	printf("%s", szBuf);
+	D(printf("%s", szBuf));
 }
 
 
@@ -181,7 +210,7 @@ main(int argc, char *argv[])
 	szHostname[sizeof (szHostname) - 1] = '\0';
 
 
-	printf("Packetspammer (c)2007 Andy Green <andy@warmcat.com>  GPL2\n");
+	D(printf("Packetspammer (c)2007 Andy Green <andy@warmcat.com>  GPL2\n"));
 
 	while (1) {
 		int nOptionIndex;
@@ -238,21 +267,21 @@ main(int argc, char *argv[])
 	switch (nLinkEncap) {
 
 		case DLT_PRISM_HEADER:
-			printf("DLT_PRISM_HEADER Encap\n");
+			D(printf("DLT_PRISM_HEADER Encap\n"));
 			nCaptureHeaderLength = 0x40;
 			n80211HeaderLength = 0x20; // ieee80211 comes after this
 			szProgram = "radio[0x4a:4]==0x13223344";
 			break;
 
 		case DLT_IEEE802_11_RADIO:
-			printf("DLT_IEEE802_11_RADIO Encap\n");
+			D(printf("DLT_IEEE802_11_RADIO Encap\n"));
 			nCaptureHeaderLength = 0x40;
 			n80211HeaderLength = 0x18; // ieee80211 comes after this
 			szProgram = "ether[0x0a:4]==0x13223344";
 			break;
 
 		default:
-			printf("!!! unknown encapsulation on %s !\n", argv[1]);
+			D(printf("!!! unknown encapsulation on %s !\n", argv[1]));
 			return (1);
 
 	}
@@ -266,14 +295,14 @@ main(int argc, char *argv[])
 			puts(szProgram);
 			puts(pcap_geterr(ppcap));
 		} else {
-			printf("RX Filter applied\n");
+			D(printf("RX Filter applied\n"));
 		}
 		pcap_freecode(&bpfprogram);
 	}
 
 	pcap_setnonblock(ppcap, 1, szErrbuf);
 
-	printf("   (delay between packets %dus)\n", nDelay);
+	D(printf("   (delay between packets %dus)\n", nDelay));
 
 	memset(u8aSendBuffer, 0, sizeof (u8aSendBuffer));
 
@@ -300,7 +329,7 @@ main(int argc, char *argv[])
 
 		u16HeaderLen = (pu8Payload[2] + (pu8Payload[3] << 8));
 
-		printf("rtap: ");
+		D(printf("rtap: "));
     pu8Payload[8] = u8aRatesToUse[nRateIndex];
 		Dump(pu8Payload, u16HeaderLen);
 
@@ -320,7 +349,7 @@ main(int argc, char *argv[])
 
 		while ((n = ieee80211_radiotap_iterator_next(&rti)) == 0) {
 
-      printf("Iterator index: %d\n", rti.arg_index);
+      D(printf("Iterator index: %d\n", rti.arg_index));
 
 			switch (rti.this_arg_index) {
 			case IEEE80211_RADIOTAP_RATE:
@@ -350,13 +379,13 @@ main(int argc, char *argv[])
 		if (prd.m_nRadiotapFlags & IEEE80211_RADIOTAP_F_FCS)
 			bytes -= 4;
 
-		printf("RX: Rate: %2d.%dMbps, Freq: %d.%dGHz, "
+		D(printf("RX: Rate: %2d.%dMbps, Freq: %d.%dGHz, "
 		    "Ant: %d, Flags: 0x%X\n",
 		    prd.m_nRate / 2, 5 * (prd.m_nRate & 1),
 		    prd.m_nChannel / 1000,
 		    prd.m_nChannel - ((prd.m_nChannel / 1000) * 1000),
 		    prd.m_nAntenna,
-		    prd.m_nRadiotapFlags);
+		    prd.m_nRadiotapFlags));
 
 		Dump(pu8Payload, bytes);
 
@@ -376,10 +405,10 @@ main(int argc, char *argv[])
       nRate=100;
       pu8[MCS_OFFSET] = 0x0f;
       pu8[MCS_RATE_OFFSET] = nRateIndex-12;
-      printf("MCS Index: %d\n", nRateIndex-12);
+      D(printf("MCS Index: %d\n", nRateIndex-12));
     } 
 
-    nRateIndex++;
+    nRateIndex=TOTAL_RATES-1;
 
 		if (nRateIndex >= TOTAL_RATES)
 			nRateIndex = 0;
@@ -399,7 +428,7 @@ main(int argc, char *argv[])
 			perror("Trouble injecting packet");
 			return (1);
 		}
-    printf("------- Delay: %d -------------\n", nDelay);
+    D(printf("------- Delay: %d -------------\n", nDelay));
 		if (nDelay) {
       struct timeval t1;
       gettimeofday(&t1, NULL);
@@ -409,6 +438,7 @@ main(int argc, char *argv[])
 			usleep(nDelay);
 
     }
+    total_pkts++;
 	}
 
 
