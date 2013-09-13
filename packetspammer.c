@@ -66,6 +66,7 @@ void sigalrm_handler(int sig)
     printf("Packets-per-second: %d  Bytes-per-second: %d\n", total_pkts, total_bytes);
     total_pkts=0;
     total_bytes=0;
+    fflush(stdout);
         /*printf("Hi...");*/ /*version 2*/
     //}else{
     //    printf("BYE\n");
