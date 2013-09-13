@@ -21,6 +21,7 @@
 #include "packetspammer.h"
 #include "radiotap.h"
 #include <sys/time.h>
+#include <signal.h>
 
 //#define DEBUG
 
@@ -31,6 +32,7 @@
 #endif
 
 int total_pkts=0;
+int total_bytes=0;
 
 /* wifi bitrate to use in 500kHz units */
 
@@ -61,7 +63,9 @@ void sigalrm_handler(int);
 void sigalrm_handler(int sig)
 {
     //if(--flag){
-        printf("Hi...\n");   /*version 1*/
+    printf("Packets-per-second: %d  Bytes-per-second: %d\n", total_pkts, total_bytes);
+    total_pkts=0;
+    total_bytes=0;
         /*printf("Hi...");*/ /*version 2*/
     //}else{
     //    printf("BYE\n");
@@ -306,6 +310,9 @@ main(int argc, char *argv[])
 
 	memset(u8aSendBuffer, 0, sizeof (u8aSendBuffer));
 
+  signal(SIGALRM, sigalrm_handler);   
+  alarm(1);  
+
 	while (!fBrokenSocket) {
 		u8 * pu8 = u8aSendBuffer;
 		struct pcap_pkthdr * ppcapPacketHeader = NULL;
@@ -408,9 +415,9 @@ main(int argc, char *argv[])
       D(printf("MCS Index: %d\n", nRateIndex-12));
     } 
 
-    nRateIndex=TOTAL_RATES-1;
+    nRateIndex=TOTAL_RATES;
 
-		if (nRateIndex >= TOTAL_RATES)
+		if (nRateIndex >= TOTAL_RATES-1)
 			nRateIndex = 0;
 		pu8 += sizeof (u8aRadiotapHeader);
 
@@ -421,7 +428,16 @@ main(int argc, char *argv[])
 		pu8 += sprintf((char *)pu8,
 		    "Packetspammer %02d"
 		    "broadcast packet"
-		    "#%05d -- :-D --%s ---- some more and more and more 1.200ms more and more and more and more 1.5736ms some and some and some some ssodijfsojsoijfsoidjfosidjfsoidjfosijdfosijfsoijfsoidfjosidjfosijfsoidjfsodifjsoidfjosidjfoisjfa;idjf;aiosjdf;oaidjsf;oaisjdf;aoisjdfoa;sijdfaofisuhfisuhdfisudhfsiudhfisudhfsiudhfisuhdfs",
+		    "broadcast packetsodijfsoidjfsoidjfsoidjfosidjfosidjfosidjfosidjfosijdfosijdfoisjdfosijdfosidjfosidjfosidjfosidjfosidjfosdifj"
+		    "broadcast packetsodijfsoidjfsoidjfsoidjfosidjfosidjfosidjfosidjfosijdfosijdfoisjdfosijdfosidjfosidjfosidjfosidjfosidjfosdifj"
+		    "broadcast packetsodijfsoidjfsoidjfsoidjfosidjfosidjfosidjfosidjfosijdfosijdfoisjdfosijdfosidjfosidjfosidjfosidjfosidjfosdifj"
+		    "broadcast packetsodijfsoidjfsoidjfsoidjfosidjfosidjfosidjfosidjfosijdfosijdfoisjdfosijdfosidjfosidjfosidjfosidjfosidjfosdifj"
+		    "broadcast packetsodijfsoidjfsoidjfsoidjfosidjfosidjfosidjfosidjfosijdfosijdfoisjdfosijdfosidjfosidjfosidjfosidjfosidjfosdifj"
+		    "broadcast packetsodijfsoidjfsoidjfsoidjfosidjfosidjfosidjfosidjfosijdfosijdfoisjdfosijdfosidjfosidjfosidjfosidjfosidjfosdifj"
+		    "broadcast packetsodijfsoidjfsoidjfsoidjfosidjfosidjfosidjfosidjfosijdfosijdfoisjdfosijdfosidjfosidjfosidjfosidjfosidjfosdifj"
+		    "broadcast packetsodijfsoidjfsoidjfsoidjfosidjfosidjfosidjfosidjfosijdfosijdfoisjdfosijdfosidjfosidjfosidjfosidjfosidjfosdifj"
+		    "broadcast packetsodijfsoidjfsoidjfsosdoifjsodiosdifj"
+		    "#%05d -- :-D --%s ---- some more and more and more 1.200ms more and more and more and more 1.5736ms some and some and some some ssodijfsojsoijfsoidjfosidjfsoidjfosijdfosijfsoijfsoidfjosidjfosijfsoidjfsodifjsoidfjosidjfoisjfa;idjf;aiosjdf;oaidjsf;oaisjdf;aoisjdfoa;sijdfaofisuhfisuhdfisudhfsiudhfisudhfsiudhfisuhdfsosidjfsoidjfsoidjfosidjfsoidfjsodifjsodifj",
 		    nRate/2, nOrdinal++, szHostname);
 		r = pcap_inject(ppcap, u8aSendBuffer, pu8 - u8aSendBuffer);
 		if (r != (pu8-u8aSendBuffer)) {
@@ -439,6 +455,8 @@ main(int argc, char *argv[])
 
     }
     total_pkts++;
+//    printf("Bytes: %d\n", bytes);
+    total_bytes+=bytes;
 	}
 
 
