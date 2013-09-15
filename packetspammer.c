@@ -68,8 +68,8 @@ void sigalrm_handler(int sig)
 
   tout_val.it_interval.tv_sec = 0;
   tout_val.it_interval.tv_usec = 0;
-  tout_val.it_value.tv_sec = 0; /* set timer for "INTERVAL (10) seconds */
-  tout_val.it_value.tv_usec = 250000;
+  tout_val.it_value.tv_sec = 1; /* set timer for "INTERVAL (10) seconds */
+  tout_val.it_value.tv_usec = 0; //250000;
   setitimer(ITIMER_REAL, &tout_val,0);
     //if(--flag){
     printf("Packets-per-second: %d  Bytes-per-second: %d\n", total_pkts, total_bytes);
@@ -221,8 +221,8 @@ main(int argc, char *argv[])
 
   tout_val.it_interval.tv_sec = 0;
   tout_val.it_interval.tv_usec = 0;
-  tout_val.it_value.tv_sec = 0; /* set timer for "INTERVAL (10) seconds */
-  tout_val.it_value.tv_usec = 250000;
+  tout_val.it_value.tv_sec = 1; /* set timer for "INTERVAL (10) seconds */
+  tout_val.it_value.tv_usec = 0; //250000;
   setitimer(ITIMER_REAL, &tout_val,0);
 
 	if (gethostname(szHostname, sizeof (szHostname) - 1)) {
@@ -432,7 +432,8 @@ main(int argc, char *argv[])
       D(printf("MCS Index: %d\n", nRateIndex-12));
     } 
 
-    nRateIndex=TOTAL_RATES;
+    //nRateIndex++; // Go through all of the rates
+    nRateIndex=10;  // fix to 1Mbps
 
 		if (nRateIndex >= TOTAL_RATES-1)
 			nRateIndex = 0;
