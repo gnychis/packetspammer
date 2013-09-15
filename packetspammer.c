@@ -128,7 +128,7 @@ typedef struct  {
 
 
 
-int flagHelp = 0, flagMarkWithFCS = 0;
+int flagHelp = 0, flagMarkWithFCS = 0, staticWait = 0;
 
 void
 Dump(u8 * pu8, int nLength)
@@ -236,12 +236,13 @@ main(int argc, char *argv[])
 	while (1) {
 		int nOptionIndex;
 		static const struct option optiona[] = {
+			{ "static", no_argument, &staticWait, 1 },
 			{ "delay", required_argument, NULL, 'd' },
 			{ "fcs", no_argument, &flagMarkWithFCS, 1 },
 			{ "help", no_argument, &flagHelp, 1 },
 			{ 0, 0, 0, 0 }
 		};
-		int c = getopt_long(argc, argv, "d:hf",
+		int c = getopt_long(argc, argv, "d:hfs",
 			optiona, &nOptionIndex);
 
 		if (c == -1)
@@ -256,6 +257,10 @@ main(int argc, char *argv[])
 		case 'd': // delay
 			nDelay = atoi(optarg);
 			break;
+
+    case 's': // static wait
+      staticWait = 1;
+      break;
 
 		case 'f': // mark as FCS attached
 			flagMarkWithFCS = 1;
@@ -459,10 +464,12 @@ main(int argc, char *argv[])
 		    "#%05d -- :-D --%s ---- some more and more and more 1.200ms more and more and more and more 1.5736ms some and some and some some ssodijfsojsoijfsoidjfosidjfsoidjfosijdfosijfsoijfsoidfjosidjfosijfsoidjfsodifjsoidfjosidjfoisjfa;idjf;aiosjdf;oaidjsf;oaisjdf;aoisjdfoa;sijdfaofisuhfisuhdfisudhfsiudhfisudhfsiudhfisuhdfsosidjfsoidjfsoidjfosidjfsoidfjsodifjsodifj",
 		    nRate/2, nOrdinal++, szHostname);
  #else
+		    // 3.2344 @ 1Mbps "#%05d -- :-D --%s ---- some more and more and more 1.200ms more and more and more and more 1.5736ms some and some and some some ssodijfsojsoijfsoidjfosidjfsoidjfosijdfosijfsoijfsoidfjosidjfosijfsoidjfsodifjsoidfjosidjfoisjfa;idjf;aiosjdf;oaidjsf;oaisjdf;aoisjdfoa;sijdfaofisuhfisuhdfisudhfsiudhfisudhfsiudhfisuhdfs",
+		    // 2.745 @ 1Mbps "#%05d -- :-D --%s ---- some more and more and more 1.200ms more and more and more and more 1.5736ms some and some and some some ssodijfsojsoijfsoidjfosidjfsoidjfosijdfosijfsoijfsoidfjosidjfosijfsoidjfsodifjsoidfjosidsodijfsoijsodifjsodifosidjfosjsdfo",
 		pu8 += sprintf((char *)pu8,
 		    "Packetspammer %02d"
 		    "broadcast packet"
-		    "#%05d -- :-D --%s ---- some more and more and more 1.200ms more and more and more and more 1.5736ms some and some and some some ssodijfsojsoijfsoidjfosidjfsoidjfosijdfosijfsoijfsoidfjosidjfosijfsoidjfsodifjsoidfjosidjfoisjfa;idjf;aiosjdf;oaidjsf;oaisjdf;aoisjdfoa;sijdfaofisuhfisuhdfisudhfsiudhfisudhfsiudhfisuhdfs",
+		    "#%05d -- :-D --%s ---- some more and more and more 1.200ms more and more and more and more 1.5736ms some and some and some some ssodijfsojsoijfsoidjfosidjfsoidjfosijdfosijfsoijfsoidfjosidjfosijfsoidjfsodifjsoidfjosidsodijfsoijsodifjsodifosidjfosjsdfo",
 		    nRate/2, nOrdinal++, szHostname);
  #endif
 		r = pcap_inject(ppcap, u8aSendBuffer, pu8 - u8aSendBuffer);
@@ -470,15 +477,15 @@ main(int argc, char *argv[])
 			perror("Trouble injecting packet");
 			return (1);
 		}
-    D(printf("------- Delay: %d -------------\n", nDelay));
 		if (nDelay) {
       struct timeval t1;
       gettimeofday(&t1, NULL);
       srand(t1.tv_usec * t1.tv_sec);
       double random_number = rand() / (double)RAND_MAX;
-      nDelay = (int)(random_number*60000);
-			usleep(nDelay);
-
+      if(staticWait)
+        usleep(nDelay);
+      else
+        usleep((int)(random_number*nDelay));
     }
     total_pkts++;
 //    printf("Bytes: %d\n", bytes);
