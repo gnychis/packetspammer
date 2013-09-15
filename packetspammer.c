@@ -62,6 +62,15 @@ void sigalrm_handler(int);
 
 void sigalrm_handler(int sig)
 {
+  struct itimerval tout_val;
+    
+  signal(SIGALRM, sigalrm_handler);
+
+  tout_val.it_interval.tv_sec = 0;
+  tout_val.it_interval.tv_usec = 0;
+  tout_val.it_value.tv_sec = 0; /* set timer for "INTERVAL (10) seconds */
+  tout_val.it_value.tv_usec = 250000;
+  setitimer(ITIMER_REAL, &tout_val,0);
     //if(--flag){
     printf("Packets-per-second: %d  Bytes-per-second: %d\n", total_pkts, total_bytes);
     total_pkts=0;
@@ -72,7 +81,7 @@ void sigalrm_handler(int sig)
     //    printf("BYE\n");
     //    flag=T;
     //}
-    alarm(1);
+    //alarm(1);
 }
 
 
@@ -208,6 +217,13 @@ main(int argc, char *argv[])
 	char * szProgram = "", fBrokenSocket = 0;
 	u16 u16HeaderLen;
 	char szHostname[PATH_MAX];
+  struct itimerval tout_val;
+
+  tout_val.it_interval.tv_sec = 0;
+  tout_val.it_interval.tv_usec = 0;
+  tout_val.it_value.tv_sec = 0; /* set timer for "INTERVAL (10) seconds */
+  tout_val.it_value.tv_usec = 250000;
+  setitimer(ITIMER_REAL, &tout_val,0);
 
 	if (gethostname(szHostname, sizeof (szHostname) - 1)) {
 		perror("unable to get hostname");
@@ -312,7 +328,7 @@ main(int argc, char *argv[])
 	memset(u8aSendBuffer, 0, sizeof (u8aSendBuffer));
 
   signal(SIGALRM, sigalrm_handler);   
-  alarm(1);  
+  //alarm(1);  
 
 	while (!fBrokenSocket) {
 		u8 * pu8 = u8aSendBuffer;
