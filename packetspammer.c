@@ -441,6 +441,7 @@ main(int argc, char *argv[])
 		memcpy(pu8, u8aIeeeHeader, sizeof (u8aIeeeHeader));
 		pu8 += sizeof (u8aIeeeHeader);
 
+#ifdef MAX_DATA
 		// 1.770: "#%05d -- :-D --%s ---- some more and more and more 1.200ms more and more and more and more 1.5736ms some and some and some some s",
 		pu8 += sprintf((char *)pu8,
 		    "Packetspammer %02d"
@@ -456,6 +457,13 @@ main(int argc, char *argv[])
 		    "broadcast packetsodijfsoidjfsoidjfsosdoifjsodiosdifj"
 		    "#%05d -- :-D --%s ---- some more and more and more 1.200ms more and more and more and more 1.5736ms some and some and some some ssodijfsojsoijfsoidjfosidjfsoidjfosijdfosijfsoijfsoidfjosidjfosijfsoidjfsodifjsoidfjosidjfoisjfa;idjf;aiosjdf;oaidjsf;oaisjdf;aoisjdfoa;sijdfaofisuhfisuhdfisudhfsiudhfisudhfsiudhfisuhdfsosidjfsoidjfsoidjfosidjfsoidfjsodifjsodifj",
 		    nRate/2, nOrdinal++, szHostname);
+ #else
+		pu8 += sprintf((char *)pu8,
+		    "Packetspammer %02d"
+		    "broadcast packet"
+		    "#%05d -- :-D --%s ---- some more and more and more 1.200ms more and more and more and more 1.5736ms some and some and some some ssodijfsojsoijfsoidjfosidjfsoidjfosijdfosijfsoijfsoidfjosidjfosijfsoidjfsodifjsoidfjosidjfoisjfa;idjf;aiosjdf;oaidjsf;oaisjdf;aoisjdfoa;sijdfaofisuhfisuhdfisudhfsiudhfisudhfsiudhfisuhdfs",
+		    nRate/2, nOrdinal++, szHostname);
+ #endif
 		r = pcap_inject(ppcap, u8aSendBuffer, pu8 - u8aSendBuffer);
 		if (r != (pu8-u8aSendBuffer)) {
 			perror("Trouble injecting packet");
